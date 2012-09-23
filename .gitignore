@@ -17,3 +17,6 @@ project/plugins/project/
 .metadata
 *.scala~
 .gitignore~
+.idea
+.DS_Store
+.cache
