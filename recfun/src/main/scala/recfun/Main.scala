@@ -19,18 +19,14 @@ object Main {
    */
   def pascal(c: Int, r: Int): Int = {
     def findAbove(currentRow: Int, currentColumn: Int): Int = {
-      if (currentColumn == 0 || currentRow == 0 || currentColumn == currentRow) return  1
-      return findAbove(currentRow - 1, currentColumn - 1) + findAbove(currentRow - 1, currentColumn)
+      if (currentColumn == 0 || currentRow == 0 || currentColumn == currentRow)  1
+      else findAbove(currentRow - 1, currentColumn - 1) + findAbove(currentRow - 1, currentColumn)
     }
-
-    var result:Int = 1
     
     if (r > 0 && c > 0) {
-      if (c == r) result = 1
-      else result = findAbove(r - 1, c - 1) + findAbove(r - 1, c)
-    }
-    
-    result
+      if (c == r)  1
+      else  findAbove(r - 1, c - 1) + findAbove(r - 1, c)
+    }else 1
   }
 
   /**
@@ -48,7 +44,6 @@ object Main {
 
       result = (numberOfP == 0)
     }
-
     result
   }
 
@@ -59,12 +54,10 @@ object Main {
     var result: Int = 0
     if (coins.isEmpty) result
 
-    def findDivider(number: Int, tempList: List[Int]): Int = {
-      var ret: Int = 0
-      if (number <= 0) ret;
-      else {
-        var i = 0
-        tempList.foreach((c: Int) => {
+    def findDivider(number: Int, tempList: List[Int]): Unit = {
+      if (number >0) {
+        tempList.indices.foreach(i=> {
+          val c = tempList(i)
           val temp = number - c
           val tempList2 = tempList.drop(i)
           if ( temp == 0) {
@@ -72,22 +65,12 @@ object Main {
           } else if (temp > 0) {
             findDivider(temp, tempList2)
           }
-
-           i +=1
         })
       }
-
-      ret
     }
 
-    var i = 0
-    coins.foreach((c: Int) => {
-      val tempList = coins.drop(i)
-      findDivider((money - c), tempList)
-      i +=1
-    })
+    findDivider(money, coins)
 
     result
   }
-
 }
