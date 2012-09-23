@@ -59,38 +59,33 @@ object Main {
     var result: Int = 0
     if (coins.isEmpty) result
 
-    def findDivider(number: Int, t: Int, x: Int,elements :LinkedList[Int]): Int = {
+    def findDivider(number: Int, tempList: List[Int]): Int = {
       var ret: Int = 0
-
-      println("x:" + x + " number:" + number + " t:" + t + " elements:"+ elements)
       if (number <= 0) ret;
       else {
-
-        coins.foreach((c: Int) => {
-          var temp = number - c
-          println(">>>> x:" + x + " number:" + number + " c:" + c)
-
-          if (temp == 0) {
-            //insertInto(elements, c)
-            
+        var i = 0
+        tempList.foreach((c: Int) => {
+          val temp = number - c
+          val tempList2 = tempList.drop(i)
+          if ( temp == 0) {
             result += 1
           } else if (temp > 0) {
-            var xtemp = x + 1
-            findDivider(temp, c, xtemp, elements)
+            findDivider(temp, tempList2)
           }
+
+           i +=1
         })
       }
 
       ret
     }
 
-    
+    var i = 0
     coins.foreach((c: Int) => {
-      var temp = (money - c);
-      findDivider(temp, c, 1, new LinkedList)
+      val tempList = coins.drop(i)
+      findDivider((money - c), tempList)
+      i +=1
     })
-
-    println("result:" + result)
 
     result
   }
