@@ -1,4 +1,4 @@
-h2. Functional Sets — View Assignment
+# Functional Sets — View Assignment
 <table>
 <tr><th>Assignment Name</th><td> Functional Sets</td></tr>
 <tr><th>Due Date </th><td>	Fri 5 Oct 2012 10:00:00 AM EEST</td></tr>
@@ -6,7 +6,7 @@ h2. Functional Sets — View Assignment
 <tr><th>Submission</th><td> 	Go to Assignments List page to submit your solutions.</td></tr>
 </table>
 
-h3. Instructions 	
+## Instructions 	
 
 In this assignment, you will work with a functional representation of sets based on the mathematical notion of characteristic functions. The goal is to gain practice with higher-order functions.
 
@@ -27,7 +27,7 @@ Using this representation, we define a function that tests for the presence of a
 
 def contains(s: Set, elem: Int): Boolean = s(elem)
 
-# Basic Functions on Sets
+* Basic Functions on Sets
 
 Let’s start by implementing basic functions on sets.
 
@@ -45,7 +45,7 @@ Define the function filter which selects only the elements of a set that are acc
 
     def filter(s: Set, p: Int => Boolean): Set
 
-# Queries and Transformations on Sets
+### Queries and Transformations on Sets
 
 In this part, we are interested in functions used to make requests on elements of a set. The first function tests whether a given predicate is true for all elements of the set. This forall function has the following signature:
 
@@ -74,7 +74,7 @@ Finally, write a function map which transforms a given set in another one by app
     def map(s: Set, f: Int => Int): Set
 
 
-h3. Extra Hints
+### Extra Hints
 
 Be attentive in the video lectures on how to write anonymous functions in Scala.
 
