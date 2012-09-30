@@ -25,9 +25,18 @@ object Lists {
    * @return The sum of all elements in `xs`
    */
   def sum(xs: List[Int]): Int = {
+    def loop(a:Int, temp:List[Int]): Int = {
+      if ( temp.isEmpty ) a
+      else loop(a + temp.head, temp.tail)
+    }
+
+    loop(0, xs)
+
+/*
     var t = 0
     if (!xs.isEmpty) xs.foreach((x: Int) => t += x)
     t
+*/
   }
 
   /**
@@ -48,6 +57,6 @@ object Lists {
     
     if (!xs.isEmpty) xs.foreach((x: Int) => if (x > t) t = x)
     else throw new NoSuchElementException("xs is empty list")    
-    t 
+    t
   }
 }
