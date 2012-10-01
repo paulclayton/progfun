@@ -98,12 +98,21 @@ class FunSetSuite extends FunSuite {
        * the test fails. This helps identifying which assertion failed.
        */
       assert(contains(s1, 1), "Singleton")
+      assert(contains(s2, 2), "Singleton")
+      assert(!contains(s3, 2), "Not contains s3 2")
     }
   }
 
-  ignore("union contains all elements") {
+  test("Singleton does not contains"){
+      new TestSets{
+        assert(!contains(s3, 2), "Not contains s3 2")
+      }
+  }
+
+  test("union contains all elements") {
     new TestSets {
       val s = union(s1, s2)
+      printSet(s)
       assert(contains(s, 1), "Union 1")
       assert(contains(s, 2), "Union 2")
       assert(!contains(s, 3), "Union 3")
