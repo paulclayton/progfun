@@ -29,15 +29,12 @@ object FunSets {
    * Returns the union of the two given sets,
    * the sets of all elements that are in either `s` or `t`.
    */
-  def union(s: Set, t: Set): Set = ??? /*{
-     def loop(f:(Int => Boolean), l : Int) :List[Int] = ??? 
-
-
-//     val xs = for (i <- -bound to bound if (contains(s, i) && contains(t,i))) yield i
-     
-//     toSet(xs.toList)
+  def union(s: Set, t: Set): Set = {
+     // def loop(f:(Int => Boolean), l : Int) :List[Int] = ??? 
+     val xs = for (i <- -bound to bound if (contains(s, i) || contains(t,i))) yield i
+     toSet(xs.toList)
   }
-*/
+
 
   /**
    * Returns the intersection of the two given sets,
