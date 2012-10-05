@@ -112,8 +112,8 @@ class FunSetSuite extends FunSuite {
   test("union contains all elements") {
     new TestSets {
       val s = union(s1, s2)
-      println("val s = union(s1, s2)")
-      printSet(s)
+      //println("val s = union(s1, s2)")
+      //printSet(s)
       assert(contains(s, 1), "Union 1")
       assert(contains(s, 2), "Union 2")
       assert(!contains(s, 3), "Union 3")
@@ -127,8 +127,8 @@ class FunSetSuite extends FunSuite {
       val u2 = union(s1, s3)
       val i = intersect(u1,u2)
       
-      println("val i = intersect(u1,u2)")
-      printSet(i)
+      //println("val i = intersect(u1,u2)")
+      //printSet(i)
       
       assert(contains(i, 1), "Intersect 1")
       assert(!contains(i, 2), "Intersect 2")
@@ -142,9 +142,9 @@ class FunSetSuite extends FunSuite {
       val u2 = union(u1, s3)
       
       val d = diff(u2,u1)
-      println("val d = intersect(u2,u1)")
+      //println("val d = intersect(u2,u1)")
       
-      printSet(d)
+      // printSet(d)
       
       assert(contains(d, 3), "Diff 3")
       assert(!contains(d, 2), "Diff 2")
@@ -152,4 +152,14 @@ class FunSetSuite extends FunSuite {
     }
   }
 
+         /*
+  test("test for exist method"){
+    new TestSets {
+      val u = union(s1, s2)
+
+      assert(exists(u, s1),"exist s1 inside u")
+
+    }
+  }
+           */
 }
