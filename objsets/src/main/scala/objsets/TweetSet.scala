@@ -21,14 +21,14 @@ abstract class TweetSet {
   def filter0(p: Tweet => Boolean, accu: TweetSet): TweetSet
 
   def union(that: TweetSet): TweetSet = {
-     var twSet:TweetSet = new Empty
+     var twSet:TweetSet = this // new Empty
      that.foreach(tw =>{
        twSet = twSet.incl(tw)
      })
-
+      /*
      this.foreach(tw => {
        twSet = twSet.incl(tw)
-     })
+     }) */
 
     twSet
   }
@@ -178,7 +178,7 @@ object GoogleVsApple {
     google.foreach(st =>{
       val t = allTweets.filter(tw => tw.text.contains(st))
 
-      aboutGoogleTweets = aboutGoogleTweets.union(t)
+      aboutGoogleTweets = aboutGoogleTweets union t
     })
 
     //allTweets foreach println
@@ -197,7 +197,7 @@ object GoogleVsApple {
     apple.foreach(st =>{
       val t = allTweets.filter(tw => tw.text.contains(st))
 
-      aboutAppleTweets = aboutAppleTweets.union(t)
+      aboutAppleTweets = aboutAppleTweets union t
     })
 
     aboutAppleTweets
@@ -220,11 +220,11 @@ object GoogleVsApple {
 object Main extends App {
   //val allTweets:TweetSet = GoogleVsApple.appleTweets union GoogleVsApple.googleTweets
   //print(GoogleVsApple.size(allTweets))
-  GoogleVsApple.trending.foreach(tw => println(tw))
+  //GoogleVsApple.trending.foreach(tw => println(tw))
 
   //GoogleVsApple.googleTweets foreach println
 
   // Some help printing the results:
-  // println("RANKED:")
-  // GoogleVsApple.trending foreach println
+  println("RANKED:")
+  GoogleVsApple.trending foreach println
 }
