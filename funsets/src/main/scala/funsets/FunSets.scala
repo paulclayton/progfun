@@ -57,7 +57,12 @@ object FunSets {
   /**
    * Returns the subset of `s` for which `p` holds.
    */
-  def filter(s: Set, p: Int => Boolean): Set = ???
+  def filter(s: Set, p: Int => Boolean): Set = {
+    // var ret:Set = null
+    val xs = for (i <- -bound to bound if (s(i) && p(i))) yield i
+    
+    toSet(xs.toList)
+  }
 
 
   /**
@@ -82,7 +87,9 @@ object FunSets {
    * that satisfies `p`.
    */
   def exists(s: Set, p: Int => Boolean): Boolean = {
-    ???
+    val xs = for (i <- -bound to bound if (s(i) && p(i))) yield i
+    
+    !xs.toList.isEmpty
   }
 
   /**

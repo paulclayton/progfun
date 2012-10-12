@@ -152,7 +152,7 @@ class FunSetSuite extends FunSuite {
     }
   }
 
-         /*
+         
   test("test for exist method"){
     new TestSets {
       val u = union(s1, s2)
@@ -161,5 +161,16 @@ class FunSetSuite extends FunSuite {
 
     }
   }
-           */
+
+  /*
+   test("test for filter method"){
+    new TestSets {
+      val u = union(s1, s2)
+
+      assert(filter(u, s1),"filter s1 inside u")
+
+    }
+  }
+*/
+           
 }

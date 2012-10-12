@@ -7,11 +7,3 @@ trait Planar {
 	def width: Int
 	def surface:Int = height * width
 }
-
-class Shape {
-	
-}
-
-class Square extends Shape with Planar {
-
-}
