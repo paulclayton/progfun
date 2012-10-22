@@ -20,12 +20,30 @@ class HuffmanSuite extends FunSuite {
     }
   }
 
+  test("weight of an Nothing tree"){
+    new TestTrees {
+      assert(weight(null) === 0)
+      assert(weight(Fork(null, null, null, 0)) == 0)
+    }
+  }
+
   test("chars of a larger tree") {
     new TestTrees {
       assert(chars(t2) === List('a','b','d'))
     }
   }
 
+  test("chars of a leaf"){
+    new TestTrees {
+      assert(chars(Leaf('a',1)) === List('a'))
+    }
+  }
+
+  test("test chars of an enpty Tree"){
+    assert(chars(null) == List())
+  }
+
+  /*
   test("string2chars(\"hello, world\")") {
     assert(string2Chars("hello, world") === List('h', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd'))
   }
@@ -44,4 +62,5 @@ class HuffmanSuite extends FunSuite {
       assert(decode(t1, encode(t1)("ab".toList)) === "ab".toList)
     }
   }
+  */
 }
