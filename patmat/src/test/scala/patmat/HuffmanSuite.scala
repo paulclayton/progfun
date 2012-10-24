@@ -43,15 +43,27 @@ class HuffmanSuite extends FunSuite {
     assert(chars(null) == List())
   }
 
-  /*
+  test("quick sort"){
+    val a = List(3,1,5,6,2,9)
+    assert(qsort(a) === List(1,2,3,5,6,9))
+  }
+
   test("string2chars(\"hello, world\")") {
     assert(string2Chars("hello, world") === List('h', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd'))
+  }
+
+  test("test of times"){
+    assert(times(string2Chars("test")) === List(('t',2),('e',1),('s',1)))
+  }
+
+  test("test of times of an empty list"){
+    assert(times(string2Chars("")) === List())
   }
 
   test("makeOrderedLeafList for some frequency table") {
     assert(makeOrderedLeafList(List(('t', 2), ('e', 1), ('x', 3))) === List(Leaf('e',1), Leaf('t',2), Leaf('x',3)))
   }
-
+  /*
   test("combine of some leaf list") {
     val leaflist = List(Leaf('e', 1), Leaf('t', 2), Leaf('x', 4))
     assert(combine(leaflist) === List(Fork(Leaf('e',1),Leaf('t',2),List('e', 't'),3), Leaf('x',4)))

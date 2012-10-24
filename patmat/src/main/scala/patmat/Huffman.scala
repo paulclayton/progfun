@@ -9,6 +9,22 @@ import common._
 object Huffman {
 
   /**
+   * Quick sort in scala
+   *
+   * @param xs Array that will be sorted
+   * @return sorted array
+   */
+  def qsort(xs: List[Int]): List[Int] =
+    if (xs.length <= 1) xs
+    else {
+      val pivot = xs(xs.length / 2)
+      List.concat(
+        qsort(xs filter (pivot >)),
+        xs filter (pivot ==),
+        qsort(xs filter (pivot <)))
+    }
+
+  /**
    * A huffman code is represented by a binary tree.
    *
    * Every `Leaf` node of the tree represents one character of the alphabet that the tree can encode.
@@ -79,7 +95,27 @@ object Huffman {
    *       println("integer is  : "+ theInt)
    *   }
    */
-  def times(chars: List[Char]): List[(Char, Int)] = ???
+  def times(chars: List[Char]): List[(Char, Int)] = {
+    if ( chars.isEmpty ) List()
+    else List.concat(List((chars.head, chars.count(chars.head == ) )), times(chars.tail.filter(chars.head !=)))
+  }
+
+
+   /*{
+    val list:List[(Char,Int)] = null
+
+
+    chars.foreach((ch:Char) -> {
+      val founded:(Char,Int) = list find  ch
+      if ( founded.isEmpty ) founded = (ch,1)
+      else founded._2 += 1
+
+      list  = founded :: list
+    })
+
+    list
+  }*/
+
 
   /**
    * Returns a list of `Leaf` nodes for a given frequency table `freqs`.
@@ -88,7 +124,23 @@ object Huffman {
    * head of the list should have the smallest weight), where the weight
    * of a leaf is the frequency of the character.
    */
-  def makeOrderedLeafList(freqs: List[(Char, Int)]): List[Leaf] = ???
+  def makeOrderedLeafList(freqs: List[(Char, Int)]): List[Leaf] = {
+    val sortedFreqs = freqs.sortBy(_._2)
+
+    def makeLeaf(sorted: List[(Char, Int)]) : List[Leaf] = {
+      if ( sorted.isEmpty) List()
+      else Leaf(sorted.head._1,sorted.head._2) :: makeLeaf(sorted.tail)
+      /*{
+
+        //val h:(Char,Int) = sorted.head
+        Leaf(sorted.head._1,sorted.head._2) :: makeLeaf(sorted.tail)
+        //Leaf(h._1,h._2) :: makeLeaf(sorted.tail)
+        //List.concat(List((Leaf(h._1, h._2))), makeLeaf(sorted.tail))
+      } */
+    }
+
+    makeLeaf(sortedFreqs)
+  }
 
   /**
    * Checks whether the list `trees` contains only one single code tree.
