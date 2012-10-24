@@ -54,7 +54,7 @@ object Huffman {
     case _ => List()
   }
 
-  def makeCodeTree(left: CodeTree, right: CodeTree) =
+  def makeCodeTree(left: CodeTree, right: CodeTree)  =
     Fork(left, right, chars(left) ::: chars(right), weight(left) + weight(right))
 
 
@@ -159,7 +159,17 @@ object Huffman {
    * If `trees` is a list of less than two elements, that list should be returned
    * unchanged.
    */
-  def combine(trees: List[CodeTree]): List[CodeTree] = ???
+  def combine(trees: List[CodeTree]): List[CodeTree] = {
+    if ( trees.size < 2) trees
+    else {
+
+
+      val first = trees.slice(0,1)
+      val second = trees.slice(1,2)
+
+      List.concat(List(makeCodeTree(first.head, second.head)), trees.slice(2, trees.size))
+    }
+  }
 
   /**
    * This function will be called in the following way:
