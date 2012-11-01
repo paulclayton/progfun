@@ -1,6 +1,7 @@
 package forcomp
 
 import common._
+import com.sun.xml.internal.bind.v2.schemagen.xmlschema.Occurs
 
 object Anagrams {
 
@@ -28,15 +29,42 @@ object Anagrams {
    */
   val dictionary: List[Word] = loadDictionary
 
+  /*
+  * count a char in a word
+   */
+  /*
+  def count(ch:Char, w:Word):Int = {
+    var count:Int = 0
+
+    w.count(p => ch==p)
+
+    for ( c <- w; ch == c) count += 1
+
+    count
+  }                    */
+
   /** Converts the word into its character occurence list.
    *  
    *  Note: the uppercase and lowercase version of the character are treated as the
    *  same character, and are represented as a lowercase character in the occurrence list.
    */
-  def wordOccurrences(w: Word): Occurrences = ???
+  def wordOccurrences(w: Word): Occurrences = {
+    val word = w.toLowerCase
+    val set = word.toSet
+
+    val res = for(ch <- set) yield (ch, word.count(p => ch==p))
+
+    res.toList.sorted
+  }
 
   /** Converts a sentence into its character occurrence list. */
-  def sentenceOccurrences(s: Sentence): Occurrences = ???
+  def sentenceOccurrences(s: Sentence): Occurrences = {
+
+    var res:Occurrences = List()
+    for (w <- s) yield (res =  List.concat(res, wordOccurrences(w)) )
+
+    res
+  }
 
   /** The `dictionaryByOccurrences` is a `Map` from different occurrences to a sequence of all
    *  the words that have that occurrence count.
