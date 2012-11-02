@@ -59,7 +59,7 @@ object Anagrams {
 
   /** Converts a sentence into its character occurrence list. */
   def sentenceOccurrences(s: Sentence): Occurrences = {
-
+    // TODO change it var as val, find a solution to solve it
     var res:Occurrences = List()
     for (w <- s) yield (res =  List.concat(res, wordOccurrences(w)) )
 
@@ -81,7 +81,9 @@ object Anagrams {
    *    List(('a', 1), ('e', 1), ('t', 1)) -> Seq("ate", "eat", "tea")
    *
    */
-  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = ???
+  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = {
+      ???
+  }
 
   /** Returns all the anagrams of a given word. */
   def wordAnagrams(word: Word): List[Word] = ???
@@ -120,7 +122,12 @@ object Anagrams {
    *  Note: the resulting value is an occurrence - meaning it is sorted
    *  and has no zero-entries.
    */
-  def subtract(x: Occurrences, y: Occurrences): Occurrences = ???
+  def subtract(x: Occurrences, y: Occurrences): Occurrences = for {
+         xx <- x
+         yy <- y
+         if xx._1 != yy._1
+         if xx._2 <= yy._2 } yield xx
+
 
   /** Returns a list of all anagram sentences of the given sentence.
    *  
