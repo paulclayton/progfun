@@ -2,6 +2,7 @@ package forcomp
 
 import common._
 import com.sun.xml.internal.bind.v2.schemagen.xmlschema.Occurs
+import collection.mutable.ListBuffer
 
 object Anagrams {
 
@@ -63,6 +64,8 @@ object Anagrams {
     var res:Occurrences = List()
     for (w <- s) yield (res =  List.concat(res, wordOccurrences(w)) )
 
+    // val res2 = for (w <- s) yield (wordOccurrences(w))
+
     res
   }
 
@@ -81,12 +84,34 @@ object Anagrams {
    *    List(('a', 1), ('e', 1), ('t', 1)) -> Seq("ate", "eat", "tea")
    *
    */
-  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = {
-      ???
+  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = ??? // for ( word <- dictionary)  yield (wordOccurrences(word), wordAnagrams(word))
+
+
+  def without(index: Int, word: String): String = new StringBuilder(word).deleteCharAt(index).toString
+
+
+  /**
+   * Find anagrams of a word
+   * @param word
+   * @return
+   */
+  def anagram (word: Word): List[Word] = {
+    if (word.length == 1) {
+      List(word)
+    } else {
+      var anagrams = ListBuffer[String]()
+      0 to word.length-1 foreach { i =>
+        anagrams ++=  (anagram(without(i, word)) map (word.charAt(i) + _))
+      }
+      anagrams.toList
+    }
   }
 
-  /** Returns all the anagrams of a given word. */
-  def wordAnagrams(word: Word): List[Word] = ???
+  /** Returns all the anagrams of a given word. Filtre by dictionary */
+  def wordAnagrams(word: Word): List[Word] = {
+    val anagramList = anagram(word)
+    anagramList filter (p => dictionary.contains(p))
+  }
 
   /** Returns the list of all subsets of the occurrence list.
    *  This includes the occurrence itself, i.e. `List(('k', 1), ('o', 1))`
@@ -110,7 +135,18 @@ object Anagrams {
    *  Note that the order of the occurrence list subsets does not matter -- the subsets
    *  in the example above could have been displayed in some other order.
    */
-  def combinations(occurrences: Occurrences): List[Occurrences] = ???
+  def combinations(occurrences: Occurrences): List[Occurrences] = {
+    if ( occurrences.isEmpty) List(Nil)
+    else {
+      val head = occurrences.head
+      val tail = occurrences.tail
+      if ( tail.isEmpty) List()
+      else if (head._2 == 0) combinations(tail)
+      else List.concat(combinations(List((head._1, head._2 - 1))), combinations(tail))
+      // else combinations(tail)
+
+    }
+  }
 
   /** Subtracts occurrence list `y` from occurrence list `x`.
    * 
