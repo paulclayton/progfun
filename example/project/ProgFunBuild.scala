@@ -36,7 +36,7 @@ import com.typesafe.sbteclipse.plugin.EclipsePlugin.EclipseKeys
  *  - http://www.jarvana.com/jarvana/view/commons-codec/commons-codec/1.4/commons-codec-1.4-javadoc.jar!/index.html
  *
  * Scalatest
- *  - http://doc.scalatest.org/1.8/index.html#org.scalatest.package
+ *  - http://doc.scalatest.org/1.9.1/index.html#org.scalatest.package
  */
 object ProgFunBuild extends Build {
 
@@ -59,8 +59,10 @@ object ProgFunBuild extends Build {
     selectMainSources,
     selectTestSources,
     scalaTestSetting,
-    styleCheckSetting
-  )
+    styleCheckSetting,
+    setTestPropertiesSetting,
+    setTestPropertiesHook
+  ) settings (packageSubmissionFiles: _*)
 
 
   /***********************************************************
@@ -96,12 +98,19 @@ object ProgFunBuild extends Build {
    * SUBMITTING A SOLUTION TO COURSERA
    */
 
+  val packageSubmission = TaskKey[File]("packageSubmission")
+
+  val packageSubmissionFiles = {
+    // the packageSrc task uses Defaults.packageSrcMappings, which is defined as concatMappings(resourceMappings, sourceMappings)
+    // in the packageSubmisson task we only use the sources, not the resources.
+    inConfig(Compile)(Defaults.packageTaskSettings(packageSubmission, Defaults.sourceMappings))
+  }
 
   /** Task to submit a solution to coursera */
   val submit = InputKey[Unit]("submit")
 
   lazy val submitSetting = submit <<= inputTask { argTask =>
-    (argTask, compile in Compile, currentProject, packageSrc in Compile, submitProjectName, projectDetailsMap, streams) map { (args, _, currentProject, sourcesJar, projectName, detailsMap, s) =>
+    (argTask, compile in Compile, currentProject, (packageSubmission in Compile), submitProjectName, projectDetailsMap, streams) map { (args, _, currentProject, sourcesJar, projectName, detailsMap, s) =>
       if (currentProject != "") {
         val msg =
           """The 'currentProject' setting is not empty: '%s'
@@ -111,43 +120,45 @@ object ProgFunBuild extends Build {
             |`project/` directory. If this error persits, ask for help on the course forums.""".format(currentProject).stripMargin +"\n "
         s.log.error(msg)
         failSubmit()
-      } else args match {
-        case email :: otPassword :: Nil =>
-          lazy val wrongNameMsg =
-            """Unknown project name: %s
-              |
-              |This error only appears if there are mistakes in the build scripts. Please re-download the assignment
-              |from the coursera webiste. Make sure that you did not perform any changes to the build files in the
-              |`project/` directory. If this error persits, ask for help on the course forums.""".format(projectName).stripMargin +"\n "
-          // log strips empty lines at the ond of `msg`. to have one we add "\n "
-          val details = detailsMap.getOrElse(projectName, {s.log.error(wrongNameMsg); failSubmit()})
-          submitSources(sourcesJar, details.assignmentPartId, email, otPassword, s.log)
-        case _ =>
-          val msg =
-            """No e-mail address and / or submission password provided. The required syntax for `submit` is
-              |  submit <e-mail> <submissionPassword>
-              |
-              |The submission password, which is NOT YOUR LOGIN PASSWORD, can be obtained from the assignment page
-              |  https://class.coursera.org/%s/assignment/index""".format(Settings.courseId).stripMargin +"\n "
-          s.log.error(msg)
-          failSubmit()
+      } else {
+        lazy val wrongNameMsg =
+          """Unknown project name: %s
+            |
+            |This error only appears if there are mistakes in the build scripts. Please re-download the assignment
+            |from the coursera webiste. Make sure that you did not perform any changes to the build files in the
+            |`project/` directory. If this error persits, ask for help on the course forums.""".format(projectName).stripMargin +"\n "
+        // log strips empty lines at the ond of `msg`. to have one we add "\n "
+        val details = detailsMap.getOrElse(projectName, {s.log.error(wrongNameMsg); failSubmit()})
+        args match {
+          case email :: otPassword :: Nil =>
+            submitSources(sourcesJar, details, email, otPassword, s.log)
+          case _ =>
+            val msg =
+              """No e-mail address and / or submission password provided. The required syntax for `submit` is
+                |  submit <e-mail> <submissionPassword>
+                |
+                |The submission password, which is NOT YOUR LOGIN PASSWORD, can be obtained from the assignment page
+                |  https://class.coursera.org/%s/assignment/index""".format(details.courseId).stripMargin +"\n "
+            s.log.error(msg)
+            failSubmit()
+        }
       }
     }
   }
 
 
-  def submitSources(sourcesJar: File, partId: String, email: String, otPassword: String, logger: Logger) {
+  def submitSources(sourcesJar: File, submitProject: ProjectDetails, email: String, otPassword: String, logger: Logger) {
     import CourseraHttp._
     logger.info("Connecting to coursera. Obtaining challenge...")
     val res = for {
-      challenge  <- getChallenge(email, partId)
+      challenge  <- getChallenge(email, submitProject)
       chResponse <- {
         logger.info("Computing challenge response...")
         challengeResponse(challenge, otPassword).successNel[String]
       }
       response   <- {
         logger.info("Submitting solution...")
-        submitSolution(sourcesJar, partId, challenge, chResponse)
+        submitSolution(sourcesJar, submitProject, challenge, chResponse)
       }
     } yield response
 
@@ -212,13 +223,15 @@ object ProgFunBuild extends Build {
 
   def filter(basedir: File, packages: Seq[String]) = new FileFilter {
     def accept(file: File) = {
-      IO.relativize(basedir, file) match {
-        case Some(str) =>
-          packages exists { pkg =>
-            str.startsWith(pkg)
-          }
-        case _ =>
-          sys.error("unexpected test file: "+ file)
+      basedir.equals(file) || {
+        IO.relativize(basedir, file) match {
+          case Some(str) =>
+            packages exists { pkg =>
+              str.startsWith(pkg)
+            }
+          case _ =>
+            sys.error("unexpected test file: "+ file +"\nbase dir: "+ basedir)
+        }
       }
     }
   }
@@ -256,23 +269,49 @@ object ProgFunBuild extends Build {
 
 
   /************************************************************
+   * PARAMETERS FOR RUNNING THE TESTS
+   *
+   * Setting some system properties that are parameters for the GradingSuite test
+   * suite mixin. This is for running the `test` task in SBT's JVM. When running
+   * the `scalaTest` task, the ScalaTestRunner creates a new JVM and passes the
+   * same properties.
+   */
+
+  val setTestProperties = TaskKey[Unit]("setTestProperties")
+  val setTestPropertiesSetting = setTestProperties := {
+    import scala.util.Properties._
+    import Settings._
+    setProp(scalaTestIndividualTestTimeoutProperty, individualTestTimeout.toString)
+    setProp(scalaTestDefaultWeigthProperty, scalaTestDefaultWeigth.toString)
+  }
+
+  val setTestPropertiesHook = (test in Test) <<= (test in Test).dependsOn(setTestProperties)
+
+
+  /************************************************************
    * RUNNING WEIGHTED SCALATEST & STYLE CHECKER ON DEVELOPMENT SOURCES
    */
 
+  def copiedResourceFiles(copied: collection.Seq[(java.io.File, java.io.File)]): List[File] = {
+    copied collect {
+      case (from, to) if to.isFile => to
+    } toList
+  }
 
   val scalaTest = TaskKey[Unit]("scalaTest")
   val scalaTestSetting = scalaTest <<=
     (compile in Compile,
       compile in Test,
       fullClasspath in Test,
+      copyResources in Compile,
       classDirectory in Test,
       baseDirectory,
-      streams) map { (_, _, classpath, testClasses, basedir, s) =>
+      streams) map { (_, _, classpath, resources, testClasses, basedir, s) =>
     // we use `map`, so this is only executed if all dependencies succeed. no need to check `GradingFeedback.isFailed`
       val logger = s.log
       val outfile = basedir / Settings.testResultsFileName
       val policyFile = basedir / Settings.policyFileName
-      val (score, maxScore, feedback, runLog) = ScalaTestRunner.runScalaTest(classpath, testClasses, outfile, policyFile, logger.error(_))
+      val (score, maxScore, feedback, runLog) = ScalaTestRunner.runScalaTest(classpath, testClasses, outfile, policyFile, copiedResourceFiles(resources), logger.error(_))
       logger.info(feedback)
       logger.info("Test Score: "+ score +" out of "+ maxScore)
       if (!runLog.isEmpty) {
@@ -308,8 +347,8 @@ object ProgFunBuild extends Build {
 
     /** settings specific to the grading project */
     initGradingSetting,
-    // default value, don't change. see comment on `val assignmentPartIdNumber`
-    assignmentPartIdNumber := -1,
+    // default value, don't change. see comment on `val partIdOfGradingProject`
+    partIdOfGradingProject := "",
     gradeProjectDetailsSetting,
     setMaxScoreSetting,
     setMaxScoreHook,
@@ -320,6 +359,10 @@ object ProgFunBuild extends Build {
     submissionLoggerSetting,
     readCompileLog,
     readTestCompileLog,
+    setTestPropertiesSetting,
+    setTestPropertiesHook,
+    resourcesFromAssignment,
+    selectResourcesForProject,
     testSourcesFromAssignment,
     selectTestsForProject,
     scalaTestSubmissionSetting,
@@ -329,11 +372,11 @@ object ProgFunBuild extends Build {
   )
 
   /**
-   * The assignment part id number of the project to be graded. Don't hard code this setting in .sbt or .scala!!!
-   * It should be set manually using 'set', explained in the README.md. In principle, we'd like to use an InputTask,
-   * but that's not possible, https://groups.google.com/forum/?fromgroups#!topic/simple-build-tool/3ymStbIdhZ0
+   * The assignment part id of the project to be graded. Don't hard code this setting in .sbt or .scala, this
+   * setting should remain a (command-line) parameter of the `submission/grade` task, defined when invoking sbt.
+   * See also feedback string in "val gradeProjectDetailsSetting".
    */
-  val assignmentPartIdNumber = SettingKey[Int]("assignmentPartIdNumber")
+  val partIdOfGradingProject = SettingKey[String]("partIdOfGradingProject")
 
   /**
    * The api key to access non-public api parts on coursera. This key is secret! It's defined in
@@ -372,22 +415,22 @@ object ProgFunBuild extends Build {
   val gradeProjectDetails = TaskKey[ProjectDetails]("gradeProjectDetails")
 
   // here we depend on `initialize` because we already use the GradingFeedback
-  lazy val gradeProjectDetailsSetting = gradeProjectDetails <<= (initGrading, assignmentPartIdNumber, projectDetailsMap in assignmentProject) map { (_, partIdNum, detailsMap) =>
-    detailsMap.find(_._2.assignmentPartIdNumber == partIdNum) match {
+  lazy val gradeProjectDetailsSetting = gradeProjectDetails <<= (initGrading, partIdOfGradingProject, projectDetailsMap in assignmentProject) map { (_, partId, detailsMap) =>
+    detailsMap.find(_._2.assignmentPartId == partId) match {
       case Some((_, details)) =>
         details
       case None =>
-        val idNums = detailsMap.map(_._2.assignmentPartIdNumber)
+        val validIds = detailsMap.map(_._2.assignmentPartId)
         val msgRaw =
-          """Unknown assignment part id number: %s
-            |Valid part id numbers are: %s
+          """Unknown assignment part id: %s
+            |Valid part ids are: %s
             |
-            |In order to grade a project, the `assignmentPartIdNumber` setting has to be defined. If you are running
-            |interactively in the sbt console, type `set (assignmentPartIdNumber in submissionProject) := 1`. When
-            |running the grading task from the command line, add the above `set` command, e.g. execute
+            |In order to grade a project, the `partIdOfGradingProject` setting has to be defined. If you are running
+            |interactively in the sbt console, type `set (partIdOfGradingProject in submissionProject) := "idString"`.
+            |When running the grading task from the command line, add the above `set` command, e.g. execute
             |
-            |  sbt 'set (assignmentPartIdNumber in submissionProject) := 1' submission/grade"""
-        val msg = msgRaw.stripMargin.format(partIdNum, idNums.mkString(", ")) + "\n "
+            |  sbt 'set (partIdOfGradingProject in submissionProject) := "idString"' submission/grade"""
+        val msg = msgRaw.stripMargin.format(partId, validIds.mkString(", ")) + "\n "
         GradingFeedback.downloadUnpackFailed(msg)
         sys.error(msg)
     }
@@ -407,7 +450,7 @@ object ProgFunBuild extends Build {
    */
 
   val getSubmission = TaskKey[Unit]("getSubmission")
-  val getSubmissionSetting = getSubmission <<= (baseDirectory, gradeProjectDetails, scalaSource in Compile) map { (baseDir, project, scalaSrcDir) =>
+  val getSubmissionSetting = getSubmission <<= (baseDirectory, scalaSource in Compile) map { (baseDir, scalaSrcDir) =>
     readAndUnpackSubmission(baseDir, scalaSrcDir)
   }
 
@@ -490,6 +533,21 @@ object ProgFunBuild extends Build {
    * RUNNING SCALATEST
    */
 
+  /** The submission project takes resource files from the main (assignment) project */
+  val resourcesFromAssignment = {
+    (resourceDirectory in Compile) <<= (resourceDirectory in (assignmentProject, Compile))
+  }
+
+  /**
+   * Only include the resource files which are defined in the package of the current project.
+   */
+  val selectResourcesForProject = {
+    (resources in Compile) <<= (resources in Compile, resourceDirectory in (assignmentProject, Compile), gradeProjectDetails) map { (resources, resourceDir, project) =>
+      val finder = resources ** filter(resourceDir, List(project.packageName))
+      finder.get
+    }
+  }
+
   /** The submission project takes test files from the main (assignment) project */
   val testSourcesFromAssignment = {
     (sourceDirectory in Test) <<= (sourceDirectory in (assignmentProject, Test))
@@ -511,12 +569,13 @@ object ProgFunBuild extends Build {
     (compile in Compile,
      compile in Test,
      fullClasspath in Test,
+     copyResources in Compile,
      classDirectory in Test,
-     baseDirectory) map { (_, _, classpath, testClasses, basedir) =>
+     baseDirectory) map { (_, _, classpath, resources, testClasses, basedir) =>
       // we use `map`, so this is only executed if all dependencies succeed. no need to check `GradingFeedback.isFailed`
       val outfile = basedir / Settings.testResultsFileName
       val policyFile = basedir / ".." / Settings.policyFileName
-      ScalaTestRunner.scalaTestGrade(classpath, testClasses, outfile, policyFile)
+      ScalaTestRunner.scalaTestGrade(classpath, testClasses, outfile, policyFile, copiedResourceFiles(resources))
   }
 
 
@@ -551,7 +610,7 @@ object ProgFunBuild extends Build {
   val grade = TaskKey[Unit]("grade")
 
   // mapR: submit the grade / feedback in any case, also on failure
-  val gradeSetting = grade <<= (scalaTestSubmission, styleCheckSubmission, apiKey, streams) mapR { (_, _, apiKeyR, s) =>
+  val gradeSetting = grade <<= (scalaTestSubmission, styleCheckSubmission, apiKey, gradeProjectDetails, streams) mapR { (_, _, apiKeyR, projectDetailsR, s) =>
     val logOpt = s match {
       case Value(v) => Some(v.log)
       case _ => None
@@ -562,7 +621,8 @@ object ProgFunBuild extends Build {
         // if build failed early, we did not even get the api key from the submission queue
         if (!GradingFeedback.apiState.isEmpty && !Settings.offlineMode) {
           val scoreString = "%.2f".format(GradingFeedback.totalScore)
-          CourseraHttp.submitGrade(GradingFeedback.feedbackString(), scoreString, GradingFeedback.apiState, apiKey) match {
+          val Value(projectDetails) = projectDetailsR
+          CourseraHttp.submitGrade(GradingFeedback.feedbackString(), scoreString, GradingFeedback.apiState, apiKey, projectDetails) match {
             case Failure(msgs) =>
               sys.error(msgs.list.mkString("\n"))
             case _ =>
@@ -581,6 +641,6 @@ object ProgFunBuild extends Build {
 
 case class ProjectDetails(packageName: String,
                           assignmentPartId: String,
-                          assignmentPartIdNumber: Int,
                           maxScore: Double,
-                          styleScoreRatio: Double)
+                          styleScoreRatio: Double,
+                          courseId: String)
