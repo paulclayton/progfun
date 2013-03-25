@@ -28,7 +28,7 @@
  <check level="warning" class="org.scalastyle.scalariform.SpacesAfterPlusChecker" enabled="false"></check>
  <check level="warning" class="org.scalastyle.file.WhitespaceEndOfLineChecker" enabled="false"></check>
  <check level="warning" class="org.scalastyle.scalariform.SpacesBeforePlusChecker" enabled="false"></check>
- <check level="warning" class="org.scalastyle.file.FileLineLengthChecker" enabled="true">
+ <check level="warning" class="org.scalastyle.file.FileLineLengthChecker" enabled="false">
   <parameters>
    <parameter name="maxLineLength"><![CDATA[160]]></parameter>
    <parameter name="tabSize"><![CDATA[4]]></parameter>
@@ -65,8 +65,8 @@
    <parameter name="ignore"><![CDATA[-1,0,1,2,3]]></parameter>
   </parameters>
  </check>
- <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceBeforeLeftBracketChecker" enabled="true"></check>
- <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceAfterLeftBracketChecker" enabled="true"></check>
+ <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceBeforeLeftBracketChecker" enabled="false"></check>
+ <check level="warning" class="org.scalastyle.scalariform.NoWhitespaceAfterLeftBracketChecker" enabled="false"></check>
  <check level="warning" class="org.scalastyle.scalariform.ReturnChecker" enabled="true"></check>
  <check level="warning" class="org.scalastyle.scalariform.NullChecker" enabled="true"></check>
  <check level="warning" class="org.scalastyle.scalariform.NoCloneChecker" enabled="true"></check>
@@ -78,10 +78,10 @@
    <parameter name="regex"><![CDATA[println]]></parameter>
   </parameters>
  </check>
- <check level="warning" class="org.scalastyle.file.RegexChecker" enabled="true">
+ <check level="warning" class="org.scalastyle.scalariform.TokenChecker" enabled="false">
   <parameters>
-   <parameter name="regex"><![CDATA[[ai]sInstanceOf]]></parameter>
-   <customMessage>Avoid casting</customMessage>
+   <parameter name="regex"><![CDATA[^isInstanceOf$]]></parameter>
+   <customMessage>Avoid isInstanceOf.</customMessage>
   </parameters>
  </check>
  <check level="warning" class="org.scalastyle.scalariform.NumberOfTypesChecker" enabled="true">
@@ -126,9 +126,10 @@
  <check level="warning" class="org.scalastyle.scalariform.VarFieldChecker" enabled="true"></check>
  <check level="warning" class="org.scalastyle.scalariform.VarLocalChecker" enabled="true"></check>
  <check level="warning" class="org.scalastyle.scalariform.WhileChecker" enabled="true"></check>
- <check level="warning" class="org.scalastyle.file.RegexChecker" enabled="true">
+ <check level="warning" class="org.scalastyle.scalariform.RedundantIfChecker" enabled="true"></check>
+ <check level="warning" class="org.scalastyle.scalariform.TokenChecker" enabled="true">
   <parameters>
-   <parameter name="regex"><![CDATA[ArrayList|ArrayBuffer|collection\.mutable]]></parameter>
+   <parameter name="regex"><![CDATA[^(ArrayList|ArrayBuffer|mutable)$]]></parameter>
    <customMessage>Avoid using mutable collections.</customMessage>
   </parameters>
  </check>

@@ -1,7 +1,6 @@
 package recfun
 import common._
 import scala.util._
-import scala.collection.mutable._
 import scala.collection.generic.SeqFactory
 
 object Main {
@@ -33,18 +32,15 @@ object Main {
    * Exercise 2
    */
   def balance(chars: List[Char]): Boolean = {
-    var result = false
-
+    var numberOfP:Int = 0
     if (!chars.isEmpty) {
-      var numberOfP = 0
+      
       chars.foreach((c: Char) => {
         if (c == '(' && numberOfP >= 0) numberOfP += 1
         if (c == ')') numberOfP -= 1
       })
-
-      result = (numberOfP == 0)
-    }
-    result
+    } else false
+    (numberOfP == 0)
   }
 
   /**
