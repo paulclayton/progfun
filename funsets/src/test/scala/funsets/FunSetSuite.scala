@@ -18,7 +18,7 @@ class FunSetSuite extends FunSuite {
   /**
    * Link to the scaladoc - very clear and detailed tutorial of FunSuite
    *
-   * http://doc.scalatest.org/1.8/index.html#org.scalatest.FunSuite
+   * http://doc.scalatest.org/1.9.1/index.html#org.scalatest.FunSuite
    *
    * Operators
    *  - test
@@ -98,79 +98,15 @@ class FunSetSuite extends FunSuite {
        * the test fails. This helps identifying which assertion failed.
        */
       assert(contains(s1, 1), "Singleton")
-      assert(contains(s2, 2), "Singleton")
-      assert(!contains(s3, 2), "Not contains s3 2")
     }
-  }
-
-  test("Singleton does not contains"){
-      new TestSets{
-        assert(!contains(s3, 2), "Not contains s3 2")
-      }
   }
 
   test("union contains all elements") {
     new TestSets {
       val s = union(s1, s2)
-      //println("val s = union(s1, s2)")
-      //printSet(s)
       assert(contains(s, 1), "Union 1")
       assert(contains(s, 2), "Union 2")
       assert(!contains(s, 3), "Union 3")
     }
   }
-
-
-  test("intersect of elements") {
-    new TestSets {
-      val u1 = union(s1, s2)
-      val u2 = union(s1, s3)
-      val i = intersect(u1,u2)
-      
-      //println("val i = intersect(u1,u2)")
-      //printSet(i)
-      
-      assert(contains(i, 1), "Intersect 1")
-      assert(!contains(i, 2), "Intersect 2")
-      assert(!contains(i, 3), "Intersectt 3")
-    }
-  }
-
-  test("diff of elements") {
-    new TestSets {
-      val u1 = union(s1, s2)
-      val u2 = union(u1, s3)
-      
-      val d = diff(u2,u1)
-      //println("val d = intersect(u2,u1)")
-      
-      // printSet(d)
-      
-      assert(contains(d, 3), "Diff 3")
-      assert(!contains(d, 2), "Diff 2")
-      assert(!contains(d, 1), "Diff 1")
-    }
-  }
-
-         
-  test("test for exist method"){
-    new TestSets {
-      val u = union(s1, s2)
-
-      assert(exists(u, s1),"exist s1 inside u")
-
-    }
-  }
-
-  /*
-   test("test for filter method"){
-    new TestSets {
-      val u = union(s1, s2)
-
-      assert(filter(u, s1),"filter s1 inside u")
-
-    }
-  }
-*/
-           
 }

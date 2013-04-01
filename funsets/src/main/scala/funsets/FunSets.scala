@@ -17,53 +17,45 @@ object FunSets {
    */
   def contains(s: Set, elem: Int): Boolean = s(elem)
 
+  def toSet(ls:List[Int]) = x => ls.contains(x)
+
   /**
    * Returns the set of the one given element.
    */
-  def singletonSet(elem: Int): Set = Set(elem)
-
-
-  def toSet(ls:List[Int]) = x => ls.contains(x)
+  def singletonSet(elem: Int): Set = { i =>
+    i == elem
+  }
 
   /**
    * Returns the union of the two given sets,
    * the sets of all elements that are in either `s` or `t`.
    */
-  def union(s: Set, t: Set): Set = {
-     // def loop(f:(Int => Boolean), l : Int) :List[Int] = ??? 
-     val xs = for (i <- -bound to bound if (contains(s, i) || contains(t,i))) yield i
-     toSet(xs.toList)
+  def union(s: Set, t: Set): Set = { i =>
+    s(i) || t(i)
   }
-
 
   /**
    * Returns the intersection of the two given sets,
-   * the set of all elements that are both in `s` or `t`.
+   * the set of all elements that are both in `s` and `t`.
    */
-  def intersect(s: Set, t: Set): Set = {
-     val xs = for (i <- -bound to bound if (contains(s, i) && contains(t,i))) yield i    
-     toSet(xs.toList)
+  def intersect(s: Set, t: Set): Set = { i =>
+    s(i) && t(i)
   }
 
   /**
    * Returns the difference of the two given sets,
    * the set of all elements of `s` that are not in `t`.
    */
-  def diff(s: Set, t: Set): Set = {
-     val xs = for (i <- -bound to bound if (contains(s, i) && !contains(t,i))) yield i
-     toSet(xs.toList)
+  def diff(s: Set, t: Set): Set = { i =>
+    s(i) && !t(i)
   }
 
   /**
    * Returns the subset of `s` for which `p` holds.
    */
-  def filter(s: Set, p: Int => Boolean): Set = {
-    // var ret:Set = null
-    val xs = for (i <- -bound to bound if (s(i) && p(i))) yield i
-    
-    toSet(xs.toList)
+  def filter(s: Set, p: Int => Boolean): Set = { i =>
+    s(i) && p(i)
   }
-
 
   /**
    * The bounds for `forall` and `exists` are +/- 1000.
@@ -75,27 +67,25 @@ object FunSets {
    */
   def forall(s: Set, p: Int => Boolean): Boolean = {
     def iter(a: Int): Boolean = {
-      if (???) ???
-      else if (???) ???
-      else iter(???)
+      if (s(a) && !p(a)) false
+      else if (a > bound) true
+      else iter(a+1)
     }
-    iter(???)
+    iter(-bound)
   }
 
   /**
    * Returns whether there exists a bounded integer within `s`
    * that satisfies `p`.
    */
-  def exists(s: Set, p: Int => Boolean): Boolean = {
-    val xs = for (i <- -bound to bound if (s(i) && p(i))) yield i
-    
-    !xs.toList.isEmpty
-  }
+  def exists(s: Set, p: Int => Boolean): Boolean = !forall(s, !p(_))
 
   /**
    * Returns a set transformed by applying `f` to each element of `s`.
    */
-  def map(s: Set, f: Int => Int): Set = ???
+  def map(s: Set, f: Int => Int): Set = { i =>
+    exists(s, f(_) == i)
+  }
 
   /**
    * Displays the contents of a set
