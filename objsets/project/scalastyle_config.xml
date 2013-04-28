@@ -80,8 +80,8 @@
  </check>
  <check level="warning" class="org.scalastyle.scalariform.TokenChecker" enabled="false">
   <parameters>
-   <parameter name="regex"><![CDATA[^[ai]sInstanceOf$]]></parameter>
-   <customMessage>Avoid casting</customMessage>
+   <parameter name="regex"><![CDATA[^isInstanceOf$]]></parameter>
+   <customMessage>Avoid isInstanceOf.</customMessage>
   </parameters>
  </check>
  <check level="warning" class="org.scalastyle.scalariform.NumberOfTypesChecker" enabled="true">
