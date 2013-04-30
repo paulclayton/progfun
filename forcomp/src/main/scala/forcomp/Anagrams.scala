@@ -1,8 +1,5 @@
 package forcomp
 
-import common._
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.Occurs
-import collection.mutable.ListBuffer
 
 object Anagrams {
 
@@ -49,24 +46,12 @@ object Anagrams {
    *  Note: the uppercase and lowercase version of the character are treated as the
    *  same character, and are represented as a lowercase character in the occurrence list.
    */
-  def wordOccurrences(w: Word): Occurrences = {
-    val word = w.toLowerCase
-    val set = word.toSet
-
-    val res = for(ch <- set) yield (ch, word.count(p => ch==p))
-
-    res.toList.sorted
-  }
+  def wordOccurrences(w: Word): Occurrences = w.groupBy(_.toLower).mapValues(_.length).toList.sortBy(_._1)
 
   /** Converts a sentence into its character occurrence list. */
-  def sentenceOccurrences(s: Sentence): Occurrences = {
-    // TODO change it var as val, find a solution to solve it
-    var res:Occurrences = List()
-    for (w <- s) yield (res =  List.concat(res, wordOccurrences(w)) )
-
-    // val res2 = for (w <- s) yield (wordOccurrences(w))
-
-    res
+  def sentenceOccurrences(sentence: Sentence): Occurrences = sentence match {
+    case Nil => Nil
+    case head :: tail => wordOccurrences(sentence.reduceLeft(_ + _)).sortBy(_._1)
   }
 
   /** The `dictionaryByOccurrences` is a `Map` from different occurrences to a sequence of all
@@ -84,17 +69,14 @@ object Anagrams {
    *    List(('a', 1), ('e', 1), ('t', 1)) -> Seq("ate", "eat", "tea")
    *
    */
-  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = ??? // for ( word <- dictionary)  yield (wordOccurrences(word), wordAnagrams(word))
+  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] =  dictionary.map(w => (wordOccurrences(w), w)).groupBy(_._1).mapValues(words => words.map(_._2))
 
 
   def without(index: Int, word: String): String = new StringBuilder(word).deleteCharAt(index).toString
 
 
-  /**
-   * Find anagrams of a word
-   * @param word
-   * @return
-   */
+
+  /*
   def anagram (word: Word): List[Word] = {
     if (word.length == 1) {
       List(word)
@@ -106,12 +88,10 @@ object Anagrams {
       anagrams.toList
     }
   }
-
+      */
   /** Returns all the anagrams of a given word. Filtre by dictionary */
-  def wordAnagrams(word: Word): List[Word] = {
-    val anagramList = anagram(word)
-    anagramList filter (p => dictionary.contains(p))
-  }
+  def wordAnagrams(word: Word): List[Word] =  dictionaryByOccurrences.find(_._1 == wordOccurrences(word)).map(_._2) getOrElse Nil
+
 
   /** Returns the list of all subsets of the occurrence list.
    *  This includes the occurrence itself, i.e. `List(('k', 1), ('o', 1))`
@@ -136,16 +116,45 @@ object Anagrams {
    *  in the example above could have been displayed in some other order.
    */
   def combinations(occurrences: Occurrences): List[Occurrences] = {
-    if ( occurrences.isEmpty) List(Nil)
-    else {
-      val head = occurrences.head
-      val tail = occurrences.tail
-      if ( tail.isEmpty) List()
-      else if (head._2 == 0) combinations(tail)
-      else List.concat(combinations(List((head._1, head._2 - 1))), combinations(tail))
-      // else combinations(tail)
-
+    def loop0(elt: (Char, Int)): Occurrences = elt match {
+      case (char, count) =>
+        (for {
+          index <- 1 to count
+        } yield char -> index).toList
     }
+
+    def loop1(elt: List[Occurrences], rest: List[Occurrences], deep: Int): List[Occurrences] = {
+      (elt, rest) match {
+        case (head :: tail, _) if(head.length == deep) => elt
+        case (acc, tail) => {
+          val res = for {
+            t <- tail
+            x <- t
+            y <- elt
+            if(!y.contains(x))
+          } yield {
+            (y :+ x)
+          }
+          if(tail.length > 1) loop1(res, tail.tail, deep) else loop1(res, tail, deep)
+        }
+      }
+    }
+
+    def loop2(remain: Occurrences, occ: Occurrences, acc: List[Occurrences]): List[Occurrences] = occ match {
+      case Nil => acc
+      case (head :: tail) => {
+        val res = (for {
+          deep <- 1 to occurrences.length
+          cb <- loop0(head)
+        } yield loop1(List(List(cb)), tail.map(loop0), deep)
+          ).reduceLeft(_ ++ _).toList
+        if(!remain.contains(head)) {
+          loop2(head :: remain, tail :+ head, acc ++ res)
+        }
+        else acc
+      }
+    }
+    loop2(Nil, occurrences, Nil).map(_.sortBy(identity)).distinct ++ List(Nil)
   }
 
   /** Subtracts occurrence list `y` from occurrence list `x`.
@@ -158,12 +167,23 @@ object Anagrams {
    *  Note: the resulting value is an occurrence - meaning it is sorted
    *  and has no zero-entries.
    */
-  def subtract(x: Occurrences, y: Occurrences): Occurrences = for {
+  def subtract(xs: Occurrences, ys: Occurrences): Occurrences =  {
+    def loop(acc: Map[Char, Int], elts: Occurrences): Occurrences = elts match {
+      case Nil => {
+        acc.toList.sortBy(_._1)
+      }
+      case (char, c1) :: tail => acc.get(char).map { c2 =>
+        if(c2 - c1 <= 0) loop(acc - char, tail) else loop(acc updated (char, c2 - c1), tail)
+      }  getOrElse loop(acc, tail)
+    }
+    loop(xs.toMap, ys)
+  }
+  /* for {
          xx <- x
          yy <- y
          if xx._1 != yy._1
          if xx._2 <= yy._2 } yield xx
-
+             */
 
   /** Returns a list of all anagram sentences of the given sentence.
    *  
@@ -205,6 +225,27 @@ object Anagrams {
    *
    *  Note: There is only one anagram of an empty sentence.
    */
-  def sentenceAnagrams(sentence: Sentence): List[Sentence] = ???
+  def sentenceAnagrams(sentence: Sentence): List[Sentence] ={
+    def sentenceAnagrams0(all: Occurrences, occurrences: Occurrences, sentence: Sentence): List[Sentence] = {
+      if(occurrences.toMap.get('a').isDefined && occurrences.toMap.get('r').isDefined && occurrences.toMap.get('t').isDefined) println(all, occurrences, sentence)
+      combinations(occurrences).flatMap { occ =>
+        if(occ.toMap.get('a').isDefined && occ.toMap.get('r').isDefined && occ.toMap.get('t').isDefined) println(all, occurrences, occ, sentence)
+        val words = dictionaryByOccurrences.get(occ) getOrElse Nil
+        (words, occ, all) match {
+          case (_, _, Nil) => {
+            List(sentence)
+          }
+          case (words, occ, _) => {
+            (for {
+              word <- words
+              s <- sentenceAnagrams0(subtract(all, occ), subtract(all, occ), sentence :+ word)
+            } yield s)
+          }
+        }
+      }
+    }
+    val all = sentenceOccurrences(sentence)
+    sentenceAnagrams0(all, all, Nil)
+  }
 
 }
