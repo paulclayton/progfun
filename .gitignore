@@ -21,3 +21,9 @@ project/plugins/project/
 .DS_Store
 .cache
 *.iml
+out/
+.idea
+.idea/
+streams/.idea
+stream/.idea
+
