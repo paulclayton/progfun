@@ -1,4 +1,4 @@
 progfun
 =======
 
-https://www.coursera.org/course/progfun assignments solution
+https://www.coursera.org/course/progfun assignments solutions
